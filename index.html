@@ -1,223 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+function trackOthers() {
+    const bl = document.getElementById('blNumber').value.trim();
+    if (!bl) {
+        alert('Please enter a B/L or container number first.');
+        document.getElementById('blNumber').focus();
+        return;
+    }
     
-    <title>Ah Hai Global BL Tracking Hub</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+    fireConfetti();
+    
+    const commonCarriers = [
+        "ZIM - www.zim.com",
+        "Yang Ming - www.yangming.com", 
+        "Wan Hai - www.wanhai.com",
+        "PIL - www.pilship.com"
+    ];
+    
+    const userUrl = prompt(
+        "Tracking for other carriers:\n\n" +
+        "Common carriers:\n" + commonCarriers.join("\n") + "\n\n" +
+        "Option A: Paste the tracking URL\n" +
+        "Option B: Leave blank to search on Google\n\n" +
+        "Tracking: " + bl,
+        ""
+    );
+    
+    if (userUrl === null) return; // 用户点击了取消
+
+    if (userUrl.trim() === "") {
+        // 方案 B: 如果输入为空，直接去 Google 搜索该提单号
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(bl)}+container+tracking`, '_blank');
+    } else {
+        // 方案 A: 如果用户输入了网址，自动加上 https:// 前缀（如果用户没写的话）并打开
+        let finalUrl = userUrl.trim();
+        if (!/^https?:\/\//i.test(finalUrl)) {
+            finalUrl = 'https://' + finalUrl;
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #d6e0f0 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 28px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-            padding: 40px 20px;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #1d1d1f;
-            margin-bottom: 25px;
-            letter-spacing: -0.5px;
-        }
-
-        .input-wrapper {
-            margin-bottom: 30px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            border: 1.5px solid #e5e5e7;
-            border-radius: 14px;
-            background: #ffffff;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #007aff;
-            background: #fff;
-        }
-
-        .companies-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 手机端强制 2 列 */
-            gap: 12px;
-        }
-
-        .company-btn {
-            background: #ffffff;
-            border: 1px solid #e5e5e7;
-            border-radius: 18px;
-            padding: 20px 10px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .company-btn:active {
-            transform: scale(0.95); /* 模拟真实按钮点击下陷感 */
-            background: #f5f5f7;
-        }
-
-        .company-logo {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 800;
-            font-size: 14px;
-        }
-
-        .company-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        /* Small phone tweaks */
-        @media (max-width: 380px) {
-            .companies-grid {
-                gap: 8px;
-            }
-            h1 { font-size: 20px; }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>GLOBAL SHIPMENT TRACKING</h1>
-        
-        <div class="input-wrapper">
-            <input type="text" id="blNumber" placeholder="Enter B/L or container number" autocomplete="off">
-        </div>
-
-        <div class="companies-grid">
-            <button class="company-btn" onclick="track('msk')">
-                <div class="company-logo" style="background: #e2001a;">MSK</div>
-                <div class="company-name">Maersk</div>
-            </button>
-
-            <button class="company-btn" onclick="track('msc')">
-                <div class="company-logo" style="background: #ffcc00; color: #000;">MSC</div>
-                <div class="company-name">MSC</div>
-            </button>
-
-            <button class="company-btn" onclick="track('cosco')">
-                <div class="company-logo" style="background: #003d82;">COSCO</div>
-                <div class="company-name">COSCO</div>
-            </button>
-
-            <button class="company-btn" onclick="track('cma')">
-                <div class="company-logo" style="background: #043e9b;">CMA</div>
-                <div class="company-name">CMA CGM</div>
-            </button>
-
-            <button class="company-btn" onclick="track('emc')">
-                <div class="company-logo" style="background: #00a651;">EMC</div>
-                <div class="company-name">Evergreen</div>
-            </button>
-
-            <button class="company-btn" onclick="track('one')">
-                <div class="company-logo" style="background: #ff0084;">ONE</div>
-                <div class="company-name">ONE</div>
-            </button>
-
-            <button class="company-btn" onclick="track('kmtc')">
-                <div class="company-logo" style="background: #111827;">KMTC</div>
-                <div class="company-name">KMTC</div>
-            </button>
-
-            <button class="company-btn" onclick="track('oocl')">
-                <div class="company-logo" style="background: #ef4444;">OOCL</div>
-                <div class="company-name">OOCL</div>
-            </button>
-
-            <button class="company-btn" onclick="track('cnc')">
-                <div class="company-logo" style="background: #2563eb;">CNC</div>
-                <div class="company-name">CNC</div>
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // Carrier official tracking URLs
-        const trackingUrls = {
-            msk:  (bl) => `https://www.maersk.com/tracking/${encodeURIComponent(bl)}`,
-            msc:  (bl) => `https://www.msc.com/en/track-a-shipment?blNumber=${encodeURIComponent(bl)}`,
-            cosco:(bl) => `https://elines.coscoshipping.com/ebusiness/cargoTracking?blNo=${encodeURIComponent(bl)}`,
-            cma:  (bl) => `https://www.cma-cgm.com/ebusiness/tracking?SearchBy=BL&Reference=${encodeURIComponent(bl)}`,
-            emc:  (bl) => `https://www.shipmentlink.com/servlet/TDB1_CargoTracking.do?number=${encodeURIComponent(bl)}`,
-            one:  (bl) => `https://ecomm.one-line.com/one-ecom/manage-shipment/cargo-tracking?blNo=${encodeURIComponent(bl)}`,
-            kmtc: (bl) => `https://www.ekmtc.com/ebiz/tracking?blNo=${encodeURIComponent(bl)}`,
-            oocl: (bl) => `https:// www.oocl.com/eng/ourservices/eservices/cargotracking/Pages/cargotracking.aspx?SearchType=BL&SearchNumber=${encodeURIComponent(bl)}`,
-            cnc:  (bl) => `https://www.cnc-ebusiness.com/ebusiness/tracking/search?Reference=${encodeURIComponent(bl)}`
-        };
-
-        function fireConfetti() {
-            confetti({
-                particleCount: 140,
-                spread: 75,
-                origin: { y: 0.7 }
-            });
-        }
-
-        function track(company) {
-            const bl = document.getElementById('blNumber').value.trim();
-            if (!bl) {
-                alert('Please enter a B/L or container number.');
-                document.getElementById('blNumber').focus();
-                return;
-            }
-
-            // Ceremony: confetti
-            fireConfetti();
-
-            // Open official carrier tracking page in a new tab
-            const buildUrl = trackingUrls[company];
-            if (!buildUrl) return;
-            const url = buildUrl(bl);
-            window.open(url, '_blank');
-        }
-
-        // Enter key triggers Maersk by default
-        document.getElementById('blNumber').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') track('msk');
-        });
-    </script>
-</body>
-</html>
+        window.open(finalUrl, '_blank');
+    }
+}
